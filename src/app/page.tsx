@@ -1,14 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
 // Компонент прогресс-бара
-function ProgressBar({ 
-    label, 
-    current, 
-    target, 
-    unit = "", 
-    color = "blue",
+function ProgressBar({
+    label,
+    current,
+    target,
+    unit = "",
     isReverse = false // для показателей, где меньше = лучше (холестерин, насыщенные жиры)
 }: {
     label: string;
@@ -20,7 +18,7 @@ function ProgressBar({
 }) {
     const percentage = Math.min((current / target) * 100, 100);
     const isOver = current > target;
-    
+
     const getBarColor = () => {
         if (isReverse) {
             // Для "плохих" показателей: зеленый когда мало, красный когда много
@@ -44,7 +42,7 @@ function ProgressBar({
                 </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
+                <div
                     className={`h-3 rounded-full transition-all duration-300 ${getBarColor()}`}
                     style={{ width: `${Math.min(percentage, 100)}%` }}
                 ></div>
@@ -58,20 +56,7 @@ function ProgressBar({
     );
 }
 
-type FoodEntry = { 
-    calories: string; 
-    protein: string; 
-    fat: string; 
-    carbohydrate: string; 
-    food_entry_name: string;
-};
-type DayResponse = { 
-    food_entries?: { food_entry?: FoodEntry[] }; 
-    date_int?: string;
-};
-
 export default function Home() {
-    const [data, setData] = useState<any[]>([]);
     const [dayData, setDayData] = useState<any>(null);
     const [selectedDate, setSelectedDate] = useState(() => {
         const yesterday = new Date();
@@ -87,20 +72,19 @@ export default function Home() {
 
     const loadDay = async () => {
         const res = await fetch(`/api/diary?date=${selectedDate}`);
-        if (!res.ok) { 
+        if (!res.ok) {
             const error = await res.text();
-            alert("Auth required or error: " + error); 
-            return; 
+            alert("Auth required or error: " + error);
+            return;
         }
         const json: any = await res.json();
         console.log('API response:', json);
-        
+
         // Handle food_entries.get.v2 response structure
         if (json.food_entries?.food_entry) {
-            const entries = Array.isArray(json.food_entries.food_entry) 
-                ? json.food_entries.food_entry 
+            const entries = Array.isArray(json.food_entries.food_entry)
+                ? json.food_entries.food_entry
                 : [json.food_entries.food_entry];
-            
             // Calculate totals for the day
             const totals = entries.reduce((acc: any, entry: any) => ({
                 calories: acc.calories + Number(entry.calories || 0),
@@ -115,14 +99,14 @@ export default function Home() {
                 omega3: acc.omega3 + Number(entry.omega3 || 0),
                 plant_based: acc.plant_based + (entry.plant_based ? 1 : 0),
                 avocado: acc.avocado + (entry.food_entry_name?.toLowerCase().includes('avocado') || entry.food_entry_name?.toLowerCase().includes('авокадо') ? 1 : 0)
-            }), { 
-                calories: 0, protein: 0, fat: 0, carbohydrate: 0, 
-                saturated_fat: 0, cholesterol: 0, fiber: 0, calcium: 0, 
-                omega3: 0, plant_based: 0, avocado: 0 
+            }), {
+                calories: 0, protein: 0, fat: 0, carbohydrate: 0,
+                saturated_fat: 0, cholesterol: 0, fiber: 0, calcium: 0,
+                omega3: 0, plant_based: 0, avocado: 0
             });
-            
-            setDayData({ 
-                date: selectedDate, 
+
+            setDayData({
+                date: selectedDate,
                 ...totals,
                 entries: entries.map((entry: any) => ({
                     name: entry.food_entry_name,
@@ -139,47 +123,33 @@ export default function Home() {
         }
     };
 
-    const testProfile = async () => {
-        const res = await fetch('/api/diary?method=profile');
-        const json = await res.json();
-        console.log('Profile response:', json);
-        alert('Check console for profile data');
-    };
-
-    const testFoods = async () => {
-        const res = await fetch('/api/diary?method=foods');
-        const json = await res.json();
-        console.log('Foods search response:', json);
-        alert('Check console for foods data');
-    };
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
             <div className="container mx-auto px-4 py-8">
-                
+
                 {/* Панель управления */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
                     <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
                         <div className="flex items-center gap-3">
                             <label className="text-sm font-medium text-gray-700">📅 Выберите дату:</label>
-                            <input 
-                                type="date" 
-                                value={selectedDate} 
+                            <input
+                                type="date"
+                                value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
                                 max={new Date().toISOString().slice(0, 10)}
                                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
-                        
+
                         <div className="flex gap-3">
-                            <button 
-                                onClick={loadDay} 
+                            <button
+                                onClick={loadDay}
                                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                             >
                                 📊 Загрузить день
                             </button>
-                            <a 
-                                href="/api/fatsecret/auth/start" 
+                            <a
+                                href="/api/fatsecret/auth/start"
                                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                             >
                                 🔗 Подключить FatSecret
@@ -221,25 +191,25 @@ export default function Home() {
                             <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">🎯 Дополнительные показатели</h2>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <div>
-                                <ProgressBar 
+                                <ProgressBar
                                     label="🌱 Растительность (порции)"
                                     current={dayData.plant_based || 0}
                                     target={5}
                                     unit=" порций"
                                 />
-                                <ProgressBar 
+                                <ProgressBar
                                     label="🥑 Авокадо (порции)"
                                     current={dayData.avocado || 0}
                                     target={1}
                                     unit=" порций"
                                 />
-                                <ProgressBar 
+                                <ProgressBar
                                     label="🦴 Кальций"
                                     current={dayData.calcium || 0}
                                     target={1000}
                                     unit="мг"
                                 />
-                                <ProgressBar 
+                                <ProgressBar
                                     label="🐟 Омега-3"
                                     current={dayData.omega3 || 0}
                                     target={2}
@@ -247,21 +217,21 @@ export default function Home() {
                                 />
                             </div>
                             <div>
-                                <ProgressBar 
+                                <ProgressBar
                                     label="🧈 Насыщенные жиры"
                                     current={dayData.saturated_fat || 0}
                                     target={20}
                                     unit="г"
                                     isReverse={true}
                                 />
-                                <ProgressBar 
+                                <ProgressBar
                                     label="🍳 Холестерин"
                                     current={dayData.cholesterol || 0}
                                     target={300}
                                     unit="мг"
                                     isReverse={true}
                                 />
-                                <ProgressBar 
+                                <ProgressBar
                                     label="🌾 Пищевые волокна"
                                     current={dayData.fiber || 0}
                                     target={25}
@@ -270,29 +240,29 @@ export default function Home() {
                             </div>
                         </div>
                     </div>
-                    
+
                         {dayData.entries.length > 0 && (
                             <div className="bg-white rounded-2xl shadow-lg p-6">
                                 <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">🍽️ Дневник питания</h2>
-                                
+
                                 {/* Группируем по приемам пищи */}
                                 {['breakfast', 'lunch', 'dinner', 'other'].map(mealType => {
-                                    const mealEntries = dayData.entries.filter((entry: any) => 
+                                    const mealEntries = dayData.entries.filter((entry: any) =>
                                         entry.meal?.toLowerCase() === mealType
                                     );
-                                    
+
                                     if (mealEntries.length === 0) return null;
-                                    
+
                                     const mealLabels = {
                                         breakfast: { name: 'Завтрак', icon: '🌅', color: 'from-orange-50 to-orange-100 border-orange-200' },
                                         lunch: { name: 'Обед', icon: '☀️', color: 'from-yellow-50 to-yellow-100 border-yellow-200' },
                                         dinner: { name: 'Ужин', icon: '🌙', color: 'from-indigo-50 to-indigo-100 border-indigo-200' },
                                         other: { name: 'Перекус', icon: '🍎', color: 'from-green-50 to-green-100 border-green-200' }
                                     };
-                                    
+
                                     const mealInfo = mealLabels[mealType as keyof typeof mealLabels];
                                     const mealTotal = mealEntries.reduce((sum: number, entry: any) => sum + entry.calories, 0);
-                                    
+
                                     return (
                                         <div key={mealType} className="mb-6 last:mb-0">
                                             <div className={`bg-gradient-to-r ${mealInfo.color} border-2 rounded-xl p-4 mb-3`}>
@@ -305,7 +275,7 @@ export default function Home() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="space-y-3 pl-2">
                                                 {mealEntries.map((entry: any, i: number) => (
                                                     <div key={i} className="bg-gray-50 rounded-lg p-4 border-l-4 border-gray-300">
@@ -315,9 +285,9 @@ export default function Home() {
                                                                 {entry.calories} ккал
                                                             </span>
                                                         </div>
-                                                        
+
                                                         <p className="text-sm text-gray-600 mb-2">{entry.description}</p>
-                                                        
+
                                                         <div className="grid grid-cols-3 gap-3 text-xs">
                                                             <div className="bg-blue-50 px-2 py-1 rounded text-center">
                                                                 <span className="text-blue-700 font-medium">💪 {entry.protein}г</span>
@@ -337,7 +307,7 @@ export default function Home() {
                                 })}
                             </div>
                         )}
-                    
+
                         {dayData.entries.length === 0 && (
                             <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
                                 <div className="text-6xl mb-4">🤷‍♀️</div>
