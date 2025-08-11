@@ -15,16 +15,19 @@ export async function GET() {
     const data = { oauth_callback: callback };
     const reqData = { url: REQUEST_TOKEN_URL, method: "POST", data };
     
-    // Подписываем запрос и кладём OAuth-параметры в Authorization хедер
-    const auth = oauth.authorize(reqData);
+    // Get OAuth authorization without token for request token step
+    const authData = oauth.authorize(reqData);
+    
+    // FatSecret might expect OAuth params in the body instead of header
+    const bodyData = {
+        ...data,
+        ...authData
+    };
+    
     const headers = {
-        ...oauth.toHeader(auth),
         "Content-Type": "application/x-www-form-urlencoded",
-    } as Record<string, string>;
-
-    // В теле достаточно передать только callback
-    const body = new URLSearchParams({ oauth_callback: callback }).toString();
-
+    };
+    const body = new URLSearchParams(bodyData).toString();
     const res = await fetch(REQUEST_TOKEN_URL, { method: "POST", headers, body });
     const txt = await res.text();
 
