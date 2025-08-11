@@ -21,7 +21,9 @@ export async function GET() {
     // FatSecret might expect OAuth params in the body instead of header
     const bodyData = {
         ...data,
-        ...authData
+        ...Object.fromEntries(
+            Object.entries(authData).map(([key, value]) => [key, String(value)])
+        )
     };
     
     const headers = {
